@@ -24,4 +24,4 @@ On Mac you need to install mac ports (http://www.macports.org then install py-fe
    sudo port install py-feedparser 
 
 Run with python ./rsstorrent.py
-}
+
