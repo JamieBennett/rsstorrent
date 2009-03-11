@@ -112,3 +112,4 @@ if not feed_bad and len(items) > 0:
    except IOError:
       if VERBOSE:
          print "Cannot stamp file %s" % TIMESTAMP
+
