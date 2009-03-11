@@ -1,0 +1,27 @@
+README
+
+Files:
+  README
+  rsstorrent.py
+
+Requirements:
+  Python >= 2.4
+  feedparser module
+
+About:
+   rsstorrent.py is a simple python script to download torrents using rss feeds. When run, it checks whether or not the rss feeds have new torrent items. If there are new items, it downloads the .torrent file ready for your torrent client of choice (rtorrent?) to carry on the download.
+
+Install:
+
+  If you haven't already, install the python feedparser module. This can be done on Ubuntu linux with the following command:
+
+   sudo apt-get install python-feedparser
+
+On Windows, under Cygwin you need to select the python-feedparser package.
+
+On Mac you need to install mac ports (http://www.macports.org then install py-feedparser with the following command
+
+   sudo port install py-feedparser 
+
+Run with python ./rsstorrent.py
+}
