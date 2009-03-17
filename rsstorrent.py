@@ -26,12 +26,13 @@ FEEDS = [
 	]
 DOWNLOAD_DIR = "/home/jamie/downloads/torrents/"
 TIMESTAMP    = "/home/jamie/downloads/rsstorrent.stamp"
+WGET_OPTIONS = "--content-disposition"
 VERBOSE      = True
 
 import feedparser
 import pickle
 import os
-import urllib
+import urllib2
 from datetime import datetime 
 
 items = []
@@ -39,26 +40,34 @@ feed_bad = False
 current_file = " "
 
 def download(url):
-	"""Copy the contents of a file from a given URL
-	to a local file.
-	"""
-	remote_file = urllib.urlopen(url)
-	local_file = open('%s%s' % (DOWNLOAD_DIR, url.split('/')[-1]), 'w')
-	local_file.write(remote_file.read())
-	remote_file.close()
-	local_file.close()
+    """Copy the contents of a file from a given URL
+    to a local file.
+    """
+    remote_file = urllib2.urlopen(url)
+    # See if this is a redirect to the real file. If so fall back to wget
+    try:
+        disposition = remote_file.info()['Content-Disposition']
+        os.system('wget "%s" "%s" -P "%s"' % (url, DOWNLOAD_DIR, WGET_OPTIONS))
+    except KeyError:
+        local_file = open('%s%s' % (DOWNLOAD_DIR, url.split('/')[-1]), 'w')
+        local_file.write(remote_file.read())
+        local_file.close()
+
+    remote_file.close()
 
 # Build up a list of torrents to check
 for feed_url in FEEDS: 
-   feed = feedparser.parse(feed_url)
+    feed = feedparser.parse(feed_url)
 
-   # Valid feed ?
-   if feed["bozo"] != 1:
-      for item in feed["items"]:
-         items.append((item["date_parsed"], item))
-   else:
-      print "bad feed: " + feed_url
-      feed_bad = True
+    # Valid feed ?
+    if feed["bozo"] != 1:
+        for item in feed["items"]:
+            items.append((item["date_parsed"], item))
+    else:
+        if VERBOSE:    
+            print "bad feed: " + feed_url
+            
+        feed_bad = True
 
 timestamp_file = " "
 
@@ -67,17 +76,17 @@ last_check_date = datetime.today()
 
 # Check to read the stamp file to see when we last checked for new torrents
 try:
-   timestamp_file = open(TIMESTAMP, 'r')
+    timestamp_file = open(TIMESTAMP, 'r')
 except IOError:
-   if VERBOSE:
-      print "Cannot open stamp file %s" % TIMESTAMP
+    if VERBOSE:
+        print "Cannot open stamp file %s" % TIMESTAMP
 
 if timestamp_file != " ":
-   try:
-      last_check_date = pickle.load(timestamp_file)
-   except EOFError:
-      if VERBOSE:
-         print "Stamp file %s is empty" % TIMESTAMP
+    try:
+        last_check_date = pickle.load(timestamp_file)
+    except EOFError:
+        if VERBOSE:
+            print "Stamp file %s is empty" % TIMESTAMP
 
 # Sort by date
 items.sort();
@@ -86,30 +95,30 @@ downloaded_torrent = False
 
 for item in items:
    # check for new items
-   id = item[0]
-   item_date = datetime(id[0], id[1], id[2], id[3], id[4])
+    id = item[0]
+    item_date = datetime(id[0], id[1], id[2], id[3], id[4])
    
-   if item_date > last_check_date:
-      if VERBOSE:
-         print "downloading: " + item[1]["link"] 
-         print "    and saving to: %s" % DOWNLOAD_DIR
+    if item_date > last_check_date:
+        if VERBOSE:
+            print "downloading: " + item[1]["link"] 
+            print "    and saving to: %s" % DOWNLOAD_DIR
    
-      download(item[1]["link"].encode('unicode_escape'))
-      downloaded_torrent = True
+        download(item[1]["link"].encode('unicode_escape'))
+        downloaded_torrent = True
 
 if downloaded_torrent == False:
-   if VERBOSE:
-      print "No new torrents to download"
+    if VERBOSE:
+        print "No new torrents to download"
 
 if not feed_bad and len(items) > 0:
    # stamp the timestamp file
-   try:
-      timestamp_file = open(TIMESTAMP, 'w')
-      last_item = items[len(items)-1][0]
-      last_item_date = datetime(last_item[0], last_item[1], last_item[2], last_item[3], last_item[4])
-      pickle.dump(last_item_date, timestamp_file)
+    try:
+        timestamp_file = open(TIMESTAMP, 'w')
+        last_item = items[len(items)-1][0]
+        last_item_date = datetime(last_item[0], last_item[1], last_item[2], last_item[3], last_item[4])
+        pickle.dump(last_item_date, timestamp_file)
 
-   except IOError:
-      if VERBOSE:
-         print "Cannot stamp file %s" % TIMESTAMP
+    except IOError:
+        if VERBOSE:
+            print "Cannot stamp file %s" % TIMESTAMP
 
