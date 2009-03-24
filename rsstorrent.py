@@ -22,7 +22,7 @@
 # do not download illegal torrents or torrents that you do not have permisson
 # to own.
 FEEDS = [
-	   "http://feedmytorrents.com/rss/88-demons-uk/",
+	   "http://somefeedurl.com",
 	]
 DOWNLOAD_DIR = "/home/jamie/downloads/torrents/"
 TIMESTAMP    = "/home/jamie/downloads/rsstorrent.stamp"
@@ -44,10 +44,11 @@ def download(url):
     to a local file.
     """
     remote_file = urllib2.urlopen(url)
+    
     # See if this is a redirect to the real file. If so fall back to wget
     try:
         disposition = remote_file.info()['Content-Disposition']
-        os.system('wget "%s" "%s" -P "%s"' % (url, DOWNLOAD_DIR, WGET_OPTIONS))
+        os.system('wget "%s" "%s" -P "%s"' % (url, WGET_OPTIONS, DOWNLOAD_DIR))
     except KeyError:
         local_file = open('%s%s' % (DOWNLOAD_DIR, url.split('/')[-1]), 'w')
         local_file.write(remote_file.read())
@@ -97,7 +98,7 @@ for item in items:
    # check for new items
     id = item[0]
     item_date = datetime(id[0], id[1], id[2], id[3], id[4])
-   
+
     if item_date > last_check_date:
         if VERBOSE:
             print "downloading: " + item[1]["link"] 
