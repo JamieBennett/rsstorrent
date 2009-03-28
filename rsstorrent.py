@@ -24,9 +24,9 @@
 FEEDS = [
 	   "http://somefeedurl.com",
 	]
+	
 DOWNLOAD_DIR = "/home/jamie/downloads/torrents/"
 TIMESTAMP    = "/home/jamie/downloads/rsstorrent.stamp"
-WGET_OPTIONS = "--content-disposition"
 VERBOSE      = True
 
 import feedparser
@@ -45,15 +45,14 @@ def download(url):
     """
     remote_file = urllib2.urlopen(url)
     
-    # See if this is a redirect to the real file. If so fall back to wget
-    try:
-        disposition = remote_file.info()['Content-Disposition']
-        os.system('wget "%s" "%s" -P "%s"' % (url, WGET_OPTIONS, DOWNLOAD_DIR))
-    except KeyError:
-        local_file = open('%s%s' % (DOWNLOAD_DIR, url.split('/')[-1]), 'w')
-        local_file.write(remote_file.read())
-        local_file.close()
-
+    # if this isn't a torrent file (probably from mininova) add a .torrent
+    # extension
+    if url[-7:] != "torrent":
+        url += ".torrent"
+        
+    local_file = open('%s%s' % (DOWNLOAD_DIR, url.split('/')[-1]), 'w')
+    local_file.write(remote_file.read())
+    local_file.close()
     remote_file.close()
 
 # Build up a list of torrents to check
